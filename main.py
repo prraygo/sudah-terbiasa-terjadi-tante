@@ -1,3 +1,5 @@
+#Coded by @prraygo
+
 import pygame
 import sys
 import time
@@ -62,7 +64,6 @@ class Particle:
             return True
         return False
 
-# Efek cahaya
 class LightEffect:
     def __init__(self):
         self.intensity = 0
@@ -89,7 +90,6 @@ class LightEffect:
             pygame.draw.circle(s, (255, 255, 255, int(alpha)), (int(size), int(size)), int(size))
             screen.blit(s, (int(center_x - size), int(center_y - size)))
 
-# Fungsi utama
 def main():
     clock = pygame.time.Clock()
     light_effect = LightEffect()
@@ -99,7 +99,7 @@ def main():
     
     running = True
     while running:
-        dt = clock.tick(60) / 1000.0  # Delta time in seconds
+        dt = clock.tick(60) / 1000.0
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -108,68 +108,46 @@ def main():
                 if event.key == pygame.K_ESCAPE:
                     running = False
         
-        # Bersihkan layar
         screen.fill(BLACK)
         
-        # Update timer dan ganti lirik jika waktunya
         time_since_last_change += dt
         if time_since_last_change >= durations[current_lyric_index]:
             time_since_last_change = 0
             current_lyric_index = (current_lyric_index + 1) % len(lyrics)
             
-            # Tambahkan banyak partikel saat kata berganti
             center_x = WIDTH // 2
             center_y = HEIGHT // 2
             for _ in range(30):
                 particles.append(Particle(center_x, center_y))
         
-        # Hitung progress animasi untuk kata saat ini (0.0 - 1.0)
         progress = min(1.0, time_since_last_change / durations[current_lyric_index])
-        
-        # Dapatkan kata saat ini
         current_lyric = lyrics[current_lyric_index]
-        
-        # Render kata dengan efek
-        text_scale = 1.0 + 0.2 * math.sin(time_since_last_change * 10)  # Efek berdetak
-        
-        # Tambahkan sedikit getaran pada posisi
+        text_scale = 1.0 + 0.2 * math.sin(time_since_last_change * 10)
         shake_amount = 3 * (1.0 - progress) if progress < 0.3 else 0
         offset_x = random.uniform(-shake_amount, shake_amount)
         offset_y = random.uniform(-shake_amount, shake_amount)
-        
-        # Render teks dengan ukuran yang berubah
         text_render = font.render(current_lyric, True, WHITE)
         text_width = text_render.get_width() * text_scale
         text_height = text_render.get_height() * text_scale
-        
         scaled_text = pygame.transform.scale(text_render, (int(text_width), int(text_height)))
-        
-        # Posisikan teks di tengah
         text_x = WIDTH // 2 - text_width // 2 + offset_x
         text_y = HEIGHT // 2 - text_height // 2 + offset_y
-        
-        # Update efek cahaya
         light_effect.update(dt)
         light_effect.draw(WIDTH // 2, HEIGHT // 2, max(text_width, text_height) / 1.5)
         
-        # Tambahkan partikel secara acak
         if random.random() < 0.3:
             particles.append(Particle(text_x + random.randint(0, int(text_width)), 
                                      text_y + random.randint(0, int(text_height))))
         
-        # Gambar teks
         screen.blit(scaled_text, (text_x, text_y))
         
-        # Update dan gambar partikel
         for particle in particles[:]:
             particle.update(dt)
             if not particle.draw():
                 particles.remove(particle)
         
-        # Batasi jumlah partikel untuk performa
         particles[:] = particles[-300:] if len(particles) > 300 else particles
         
-        # Perbarui layar
         pygame.display.flip()
     
     pygame.quit()
